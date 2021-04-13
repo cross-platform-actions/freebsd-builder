@@ -1,0 +1,65 @@
+name: Build VM Disk Image
+
+on:
+  push:
+    branches: '*'
+    tags: 'v*'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container: ubuntu:21.04
+    strategy:
+        matrix:
+          version:
+            - 12.2
+
+          architecture:
+            - x86-64
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Install Dependecies
+        run: apt update && apt install curl unzip "qemu-system-$QEMU_ARCHITECTURE" -y
+        env:
+          QEMU_ARCHITECTURE: ${{
+              matrix.architecture == 'x86-64' && 'x86' ||
+              matrix.architecture == 'arm64' && 'aarch64' ||
+              matrix.architecture
+            }}
+
+      - name: Install Packer
+        run: |
+          curl -o packer.zip -L https://releases.hashicorp.com/packer/1.7.1/packer_1.7.1_linux_amd64.zip
+          unzip packer.zip
+          mv packer /usr/local/bin
+
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+
+      - name: Build Image
+        run: PACKER_LOG=1 ./build.sh '${{ matrix.version }}' '${{ matrix.architecture }}' -var 'headless=true'
+
+      - name: Extract Version
+        id: version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
+
+      - name: Create Release
+        id: create_release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          name: FreeBSD ${{ steps.version.outputs.VERSION }}
+          draft: true
+          files: output/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

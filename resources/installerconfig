@@ -1,0 +1,61 @@
+if [ -e /dev/vtbd0 ]; then
+  PARTITIONS=vtbd0
+elif [ -e /dev/ada0 ]; then
+  PARTITIONS=ada0
+elif [ -e /dev/da0 ]; then
+  PARTITIONS=da0
+else
+  echo "ERROR: There is no disk available for installation" >&2
+  exit 1
+fi
+
+DISTRIBUTIONS='kernel.txz base.txz'
+HOSTNAME=freebsd
+
+#!/bin/sh
+
+set -exu
+
+configure_network() {
+cat <<EOF > /etc/resolv.conf
+nameserver 8.8.8.8
+EOF
+
+interface=$(route get default | awk '/interface/ { print $2 }')
+cat <<EOF >> /etc/rc.conf
+ifconfig_${interface}="DHCP"
+sshd_enable="YES"
+EOF
+}
+
+configure_ssh() {
+  tee -a /etc/ssh/sshd_config <<EOF
+PermitRootLogin yes
+PasswordAuthentication yes
+UseDNS no
+AcceptEnv *
+EOF
+}
+
+configure_root_user() {
+  echo "$ROOT_PASSWORD" | pw usermod root -h 0
+}
+
+configure_timezone() {
+  /bin/cp /usr/share/zoneinfo/UTC /etc/localtime
+  /usr/bin/touch /etc/wall_cmos_clock
+  /sbin/adjkerntz -a
+  /usr/sbin/ntpdate -u 0.pool.ntp.org
+}
+
+configure_ntpd() {
+cat <<EOF >> /etc/rc.conf
+ntpd_enable="YES"
+EOF
+}
+
+configure_network
+configure_ssh
+configure_root_user
+configure_timezone
+configure_ntpd
