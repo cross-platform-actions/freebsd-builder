@@ -84,12 +84,22 @@ variable "accelerator" {
   description = "The accelerator type to use when running the VM"
 }
 
+variable "firmware" {
+  type = string
+  description = "The firmware file to be used by QEMU"
+}
+
 locals {
   image_architecture = var.architecture == "x86-64" ? "amd64" : (
     var.architecture == "arm64" ? "arm64-aarch64" : var.architecture
   )
   vm_name = "freebsd-${var.os_version}-${var.architecture}.qcow2"
-  iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-disc1.iso"
+  iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-mini-memstick.img"
+
+  iso_target_extension = "img"
+  iso_target_path = "packer_cache"
+  iso_full_target_path = "${local.iso_target_path}/${sha1(var.checksum)}.${local.iso_target_extension}"
+
   qemu_architecture = var.architecture == "arm64" ? "aarch64" : (
     var.architecture == "x86-64" ? "x86_64" : var.architecture
   )
@@ -110,10 +120,12 @@ source "qemu" "qemu" {
   use_default_display = var.use_default_display
   display = var.display
   accelerator = var.accelerator
+  qemu_binary = "qemu-system-${local.qemu_architecture}"
+  firmware = var.firmware
 
   boot_wait = "10s"
 
-  boot_command = [
+  /*boot_command = [
     "2<enter><wait30s>",
     "<enter><wait>",
     "mdmfs -s 100m md1 /tmp<enter><wait>",
@@ -124,18 +136,51 @@ source "qemu" "qemu" {
     "SECONDARY_USER_USERNAME=${var.secondary_user_username} ",
     "SECONDARY_USER_PASSWORD=${var.secondary_user_password} ",
     "bsdinstall script /tmp/installerconfig && reboot<enter>"
-  ]
+  ]*/
 
   ssh_username = "root"
   ssh_password = var.root_password
   ssh_timeout = "10000s"
 
+  /*qemuargs = [
+    ["-cpu", var.cpu_type],
+    ["-boot", "strict=off"],
+    ["-monitor", "none"]
+  ]*/
+
   qemuargs = [
     ["-cpu", var.cpu_type],
-    ["-monitor", "none"]
+    ["-boot", "strict=off"],
+    ["-monitor", "none"],
+    ["-device", "virtio-scsi-pci"],
+    ["-device", "virtio-blk-device,drive=drive0,bootindex=0"],
+    ["-device", "virtio-blk-device,drive=drive1,bootindex=1"],
+    ["-drive", "if=none,file={{ .OutputDir }}/{{ .Name }},id=drive0,cache=writeback,discard=ignore,format=qcow2"],
+    ["-drive", "if=none,file=${local.iso_full_target_path},id=drive1,media=disk,format=raw"],
   ]
 
+  /*qemuargs = [
+    ["-boot", "strict=off"],
+    ["-monitor", "none"],
+    ["-m", "4096M"],
+    ["-netdev", "user,id=user.0,hostfwd=tcp::3403-:22"],
+    ["-smp", "cpus=2,sockets=2"],
+    ["-name", "freebsd-13.0-arm64.qcow2"],
+    ["-bios", "edk2-aarch64-code.fd"],
+    ["-cpu", "cortex-a57"],
+    ["-device", "virtio-scsi-pci"],
+    ["-device", "virtio-blk-device,drive=drive0,bootindex=0"],
+    ["-device", "virtio-blk-device,drive=drive1,bootindex=1"],
+    ["-device", "virtio-net,netdev=user.0"],
+    ["-drive", "if=none,file=output/freebsd-13.0-arm64.qcow2,id=drive0,cache=writeback,discard=ignore,format=qcow2"],
+    ["-drive", "if=none,file=/Users/doob/development/github-actions/cross-platform-actions/freebsd-builder/packer_cache/56bb88e57161b7853783a15142ade2877a4fdcd3.img,id=drive1,media=disk,format=raw"],
+    ["-machine", "type=virt,accel=tcg"],
+    ["-display", "cocoa"]
+  ]*/
+
   iso_checksum = var.checksum
+  iso_target_extension = local.iso_target_extension
+  iso_target_path = local.iso_target_path
   iso_urls = [
     "http://ftp.freebsd.org/pub/${local.iso_path}",
     "http://ftp4.se.freebsd.org/pub/${local.iso_path}",
