@@ -94,11 +94,21 @@ locals {
     var.architecture == "arm64" ? "arm64-aarch64" : var.architecture
   )
   vm_name = "freebsd-${var.os_version}-${var.architecture}.qcow2"
-  iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-mini-memstick.img"
 
-  iso_target_extension = "img"
+  iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-disc1.iso"
+  iso_target_extension = "iso"
   iso_target_path = "packer_cache"
   iso_full_target_path = "${local.iso_target_path}/${sha1(var.checksum)}.${local.iso_target_extension}"
+
+  /*iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-memstick.img"
+  iso_target_extension = "img"
+  iso_target_path = "packer_cache"
+  iso_full_target_path = "${local.iso_target_path}/${sha1(var.checksum)}.${local.iso_target_extension}"*/
+
+  /*iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-mini-memstick.img"
+  iso_target_extension = "img"
+  iso_target_path = "packer_cache"
+  iso_full_target_path = "${local.iso_target_path}/${sha1(var.checksum)}.${local.iso_target_extension}"*/
 
   qemu_architecture = var.architecture == "arm64" ? "aarch64" : (
     var.architecture == "x86-64" ? "x86_64" : var.architecture
@@ -127,7 +137,7 @@ source "qemu" "qemu" {
 
   /*boot_command = [
     "2<enter><wait30s>",
-    "<enter><wait>",
+    "<enter><wait5s>",
     "mdmfs -s 100m md1 /tmp<enter><wait>",
     "dhclient -l /tmp/dhclient.leases -p /tmp/dhclient.pid vtnet0<enter><wait5>",
     "fetch -o /tmp/installerconfig http://{{.HTTPIP}}:{{.HTTPPort}}/resources/installerconfig<enter><wait>",
@@ -142,12 +152,6 @@ source "qemu" "qemu" {
   ssh_password = var.root_password
   ssh_timeout = "10000s"
 
-  /*qemuargs = [
-    ["-cpu", var.cpu_type],
-    ["-boot", "strict=off"],
-    ["-monitor", "none"]
-  ]*/
-
   qemuargs = [
     ["-cpu", var.cpu_type],
     ["-boot", "strict=off"],
@@ -156,27 +160,8 @@ source "qemu" "qemu" {
     ["-device", "virtio-blk-device,drive=drive0,bootindex=0"],
     ["-device", "virtio-blk-device,drive=drive1,bootindex=1"],
     ["-drive", "if=none,file={{ .OutputDir }}/{{ .Name }},id=drive0,cache=writeback,discard=ignore,format=qcow2"],
-    ["-drive", "if=none,file=${local.iso_full_target_path},id=drive1,media=disk,format=raw"],
+    ["-drive", "if=none,file=${local.iso_full_target_path},id=drive1,media=cdrom,format=raw"],
   ]
-
-  /*qemuargs = [
-    ["-boot", "strict=off"],
-    ["-monitor", "none"],
-    ["-m", "4096M"],
-    ["-netdev", "user,id=user.0,hostfwd=tcp::3403-:22"],
-    ["-smp", "cpus=2,sockets=2"],
-    ["-name", "freebsd-13.0-arm64.qcow2"],
-    ["-bios", "edk2-aarch64-code.fd"],
-    ["-cpu", "cortex-a57"],
-    ["-device", "virtio-scsi-pci"],
-    ["-device", "virtio-blk-device,drive=drive0,bootindex=0"],
-    ["-device", "virtio-blk-device,drive=drive1,bootindex=1"],
-    ["-device", "virtio-net,netdev=user.0"],
-    ["-drive", "if=none,file=output/freebsd-13.0-arm64.qcow2,id=drive0,cache=writeback,discard=ignore,format=qcow2"],
-    ["-drive", "if=none,file=/Users/doob/development/github-actions/cross-platform-actions/freebsd-builder/packer_cache/56bb88e57161b7853783a15142ade2877a4fdcd3.img,id=drive1,media=disk,format=raw"],
-    ["-machine", "type=virt,accel=tcg"],
-    ["-display", "cocoa"]
-  ]*/
 
   iso_checksum = var.checksum
   iso_target_extension = local.iso_target_extension

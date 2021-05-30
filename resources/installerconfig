@@ -1,5 +1,5 @@
-if [ -e /dev/vtbd0 ]; then
-  PARTITIONS=vtbd0
+if [ -e /dev/vtbd1 ]; then
+  PARTITIONS=vtbd1
 elif [ -e /dev/ada0 ]; then
   PARTITIONS=ada0
 elif [ -e /dev/da0 ]; then
