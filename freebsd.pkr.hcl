@@ -86,8 +86,9 @@ variable "accelerator" {
 
 locals {
   image_architecture = var.architecture == "x86-64" ? "amd64" : (
-    var.architecture == "arm64" ? "arm64-aarch64" : var.architecture
-  )
+    var.architecture == "arm64" ? "arm64-aarch64" : (
+    var.architecture == "x86" ? "i386" : var.architecture
+  ))
   vm_name = "freebsd-${var.os_version}-${var.architecture}.qcow2"
   iso_path = "FreeBSD/releases/ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-disc1.iso"
   qemu_architecture = var.architecture == "arm64" ? "aarch64" : (

@@ -16,11 +16,12 @@ jobs:
     strategy:
         matrix:
           version:
-            - '12.2'
+            # - '12.2'
             - '13.0'
 
           architecture:
             - x86-64
+            - x86
 
     steps:
       - name: Clone Repository
