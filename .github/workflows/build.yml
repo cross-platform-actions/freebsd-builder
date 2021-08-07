@@ -20,7 +20,7 @@ jobs:
             - '13.0'
 
           architecture:
-            - x86-64
+            # - x86-64
             - x86
 
     steps:
