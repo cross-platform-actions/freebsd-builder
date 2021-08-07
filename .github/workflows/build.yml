@@ -29,9 +29,9 @@ jobs:
           persist-credentials: false
 
       - name: Install Dependecies
-        run: apt update && apt install curl unzip "qemu-system-$QEMU_ARCHITECTURE" -y
+        run: apt update && apt install curl unzip "qemu-system-$QEMU_PACKAGE_ARCHITECTURE" -y
         env:
-          QEMU_ARCHITECTURE: ${{
+          QEMU_PACKAGE_ARCHITECTURE: ${{
               matrix.architecture == 'x86-64' && 'x86' ||
               matrix.architecture == 'arm64' && 'aarch64' ||
               matrix.architecture
