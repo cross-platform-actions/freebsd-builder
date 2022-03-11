@@ -5,6 +5,7 @@ set -exu
 configure_boot_flags() {
   cat <<EOF >> /boot/loader.conf
 autoboot_delay="-1"
+console="comconsole"
 EOF
 }
 
