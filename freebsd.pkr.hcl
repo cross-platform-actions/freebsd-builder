@@ -111,7 +111,7 @@ source "qemu" "qemu" {
   display = var.display
   accelerator = var.accelerator
 
-  boot_wait = "10s"
+  boot_wait = "5s"
 
   boot_command = [
     "2<enter><wait30s>",

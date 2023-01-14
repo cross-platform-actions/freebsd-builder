@@ -12,12 +12,13 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container: ubuntu:21.04
+    container: ubuntu:22.10
     strategy:
         matrix:
           version:
             - '12.2'
             - '13.0'
+            - '13.1'
 
           architecture:
             - x86-64
