@@ -24,6 +24,7 @@ The following architectures and versions are supported:
 |---------|--------|
 | 13.1    | ✓      |
 | 13.0    | ✓      |
+| 12.4    | ✓      |
 | 12.2    | ✓      |
 
 ## Building Locally
