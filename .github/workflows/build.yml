@@ -26,11 +26,11 @@ jobs:
 
     steps:
       - name: Clone Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           persist-credentials: false
 
-      - name: Install Dependecies
+      - name: Install Dependencies
         run: apt update && apt install curl unzip "qemu-system-$QEMU_ARCHITECTURE" -y
         env:
           QEMU_ARCHITECTURE: ${{
@@ -39,11 +39,9 @@ jobs:
               matrix.architecture
             }}
 
-      - name: Install Packer
-        run: |
-          curl -o packer.zip -L https://releases.hashicorp.com/packer/1.7.1/packer_1.7.1_linux_amd64.zip
-          unzip packer.zip
-          mv packer /usr/local/bin
+      - uses: hashicorp/setup-packer@main
+        with:
+          version: "1.7.1"
 
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
