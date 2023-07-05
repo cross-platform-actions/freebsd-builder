@@ -20,19 +20,19 @@ allowed use `sudo` without a password.
 
 The following architectures and versions are supported:
 
-| Version | x86-64 |
-|---------|--------|
-| 13.2    | ✓      |
-| 13.1    | ✓      |
-| 13.0    | ✓      |
-| 12.4    | ✓      |
-| 12.2    | ✓      |
+| Version | x86-64 | ARM64 |
+|---------|--------|-------|
+| 13.2    | ✓      | ✓     |
+| 13.1    | ✓      | ✓     |
+| 13.0    | ✓      | ✓     |
+| 12.4    | ✓      | ✓     |
+| 12.2    | ✓      | ✗     |
 
 ## Building Locally
 
 ### Prerequisite
 
-* [Packer](https://www.packer.io) 1.7.1 or later
+* [Packer](https://www.packer.io) 1.9.1 or later
 * [QEMU](https://qemu.org)
 
 ### Building

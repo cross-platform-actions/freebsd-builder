@@ -1,0 +1,6 @@
+architecture = "arm64"
+image_architecture = "arm64-aarch64"
+qemu_architecture = "aarch64"
+machine_type = "virt"
+cpu_type = "cortex-a57"
+firmware = "edk2-aarch64-code.fd"

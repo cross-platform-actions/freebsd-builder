@@ -9,6 +9,18 @@ variable "architecture" {
   description = "The architecture of CPU to use when building"
 }
 
+variable "image_architecture" {
+  default = "amd64"
+  type = string
+  description = "The name of the architecture used by the ISO image"
+}
+
+variable "qemu_architecture" {
+  default = "x86_64"
+  type = string
+  description = "The name of the architecture in the QEMU binary"
+}
+
 variable "machine_type" {
   default = "pc"
   type = string
@@ -84,19 +96,18 @@ variable "accelerator" {
   description = "The accelerator type to use when running the VM"
 }
 
+variable "firmware" {
+  type = string
+  description = "The firmware file to be used by QEMU"
+}
+
 locals {
-  image_architecture = var.architecture == "x86-64" ? "amd64" : (
-    var.architecture == "arm64" ? "arm64-aarch64" : var.architecture
-  )
   vm_name = "freebsd-${var.os_version}-${var.architecture}.qcow2"
-  iso_path = "ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${local.image_architecture}-disc1.iso"
-  qemu_architecture = var.architecture == "arm64" ? "aarch64" : (
-    var.architecture == "x86-64" ? "x86_64" : var.architecture
-  )
+  iso_path = "ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${var.image_architecture}-disc1.iso"
 }
 
 source "qemu" "qemu" {
-  machine_type = var.machine_type
+  machine_type = "${var.machine_type}"
   cpus = var.cpus
   memory = var.memory
   net_device = "virtio-net"
@@ -110,12 +121,14 @@ source "qemu" "qemu" {
   use_default_display = var.use_default_display
   display = var.display
   accelerator = var.accelerator
+  qemu_binary = "qemu-system-${var.qemu_architecture}"
+  firmware = var.firmware
 
   boot_wait = "5s"
 
   boot_command = [
-    "2<enter><wait30s>",
-    "<enter><wait>",
+    "2<wait30s>",
+    "<enter><wait10>",
     "mdmfs -s 100m md1 /tmp<enter><wait>",
     "dhclient -l /tmp/dhclient.leases -p /tmp/dhclient.pid vtnet0<enter><wait5>",
     "fetch -o /tmp/installerconfig http://{{.HTTPIP}}:{{.HTTPPort}}/resources/installerconfig<enter><wait>",
@@ -132,6 +145,7 @@ source "qemu" "qemu" {
 
   qemuargs = [
     ["-cpu", var.cpu_type],
+    ["-boot", "strict=off"],
     ["-monitor", "none"]
   ]
 

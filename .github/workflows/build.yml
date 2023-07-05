@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: ${{ matrix.version }} ${{ matrix.architecture.name }}
     runs-on: ubuntu-latest
     container: ubuntu:22.10
     strategy:
@@ -24,7 +24,17 @@ jobs:
             - '13.2'
 
           architecture:
-            - x86-64
+            - name: x86-64
+              qemu: x86
+
+            - name: arm64
+              qemu: aarch64
+
+          exclude:
+            - version: '12.2'
+              architecture:
+                name: arm64
+                qemu: aarch64
 
     steps:
       - name: Clone Repository
@@ -33,23 +43,30 @@ jobs:
           persist-credentials: false
 
       - name: Install Dependencies
-        run: apt update && apt install curl unzip "qemu-system-$QEMU_ARCHITECTURE" -y
-        env:
-          QEMU_ARCHITECTURE: ${{
-              matrix.architecture == 'x86-64' && 'x86' ||
-              matrix.architecture == 'arm64' && 'aarch64' ||
-              matrix.architecture
-            }}
+        run: |
+          apt update && \
+          apt install curl jq unzip \
+          "qemu-system-${{ matrix.architecture.qemu }}" -y
 
       - uses: hashicorp/setup-packer@main
         with:
-          version: "1.7.1"
+          version: "1.9.1"
 
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
+
+      - name: Install UEFI
+        if: matrix.architecture.name == 'arm64'
+        run: cp "$(cat /usr/share/qemu/firmware/60-edk2-aarch64.json | jq .mapping.executable.filename -r)" edk2-aarch64-code.fd
 
       - name: Build Image
-        run: PACKER_LOG=1 ./build.sh '${{ matrix.version }}' '${{ matrix.architecture }}' -var 'headless=true'
+        env:
+          PACKER_LOG: 1
+        run: |
+          ./build.sh '${{ matrix.version }}' '${{ matrix.architecture.name }}' \
+            -var 'headless=true'
 
       - name: Extract Version
         id: version
