@@ -17,18 +17,18 @@ jobs:
         fail-fast: false
         matrix:
           version:
-            - '12.2'
-            - '12.4'
-            - '13.0'
-            - '13.1'
+            # - '12.2'
+            # - '12.4'
+            # - '13.0'
+            # - '13.1'
             - '13.2'
 
           architecture:
             - name: x86-64
               qemu: x86
 
-            - name: arm64
-              qemu: aarch64
+            # - name: arm64
+            #   qemu: aarch64
 
           exclude:
             - version: '12.2'
@@ -52,14 +52,14 @@ jobs:
         with:
           version: "1.9.1"
 
+      - name: Install UEFI
+        if: matrix.architecture.name == 'arm64'
+        run: cp "$(cat /usr/share/qemu/firmware/60-edk2-aarch64.json | jq .mapping.executable.filename -r)" edk2-aarch64-code.fd
+
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
       #   with:
       #     limit-access-to-actor: true
-
-      - name: Install UEFI
-        if: matrix.architecture.name == 'arm64'
-        run: cp "$(cat /usr/share/qemu/firmware/60-edk2-aarch64.json | jq .mapping.executable.filename -r)" edk2-aarch64-code.fd
 
       - name: Build Image
         env:
