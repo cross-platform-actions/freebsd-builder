@@ -44,7 +44,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          brew install qemu -y
+          brew install qemu
           # apt update && \
           # apt install curl jq unzip \
           # "qemu-system-${{ matrix.architecture.qemu }}" -y
