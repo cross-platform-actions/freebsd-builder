@@ -44,9 +44,10 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          apt update && \
-          apt install curl jq unzip \
-          "qemu-system-${{ matrix.architecture.qemu }}" -y
+          brew install qemu -y
+          # apt update && \
+          # apt install curl jq unzip \
+          # "qemu-system-${{ matrix.architecture.qemu }}" -y
 
       - uses: hashicorp/setup-packer@main
         with:
