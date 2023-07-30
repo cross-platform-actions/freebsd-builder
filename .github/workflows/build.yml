@@ -11,8 +11,8 @@ on:
 jobs:
   build:
     name: ${{ matrix.version }} ${{ matrix.architecture.name }}
-    runs-on: ubuntu-latest
-    container: ubuntu:22.10
+    runs-on: macos-latest
+    # container: ubuntu:22.10
     strategy:
         fail-fast: false
         matrix:
