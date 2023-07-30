@@ -56,10 +56,10 @@ jobs:
         if: matrix.architecture.name == 'arm64'
         run: cp "$(cat /usr/share/qemu/firmware/60-edk2-aarch64.json | jq .mapping.executable.filename -r)" edk2-aarch64-code.fd
 
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
 
       - name: Build Image
         env:
