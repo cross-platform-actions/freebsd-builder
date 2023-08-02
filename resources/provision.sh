@@ -100,21 +100,6 @@ setup_work_directory() {
   chown "$permissions" "$work_directory"
 }
 
-cleanup() {
-  pkg clean -a -y
-}
-
-minimize_disk() {
-  dd if=/dev/zero of=/EMPTY bs=1M || :
-  rm /EMPTY
-}
-
-minimize_swap() {
-  local swap_device=$(swapctl -l | awk '!/^Device/ { print $1 }')
-  swapctl -d "$swap_device"
-  dd if=/dev/zero of="$swap_device" bs=1M || :
-}
-
 setup_secondary_user
 configure_boot_flags
 configure_sendmail
@@ -122,7 +107,3 @@ configure_boot_scripts
 install_extra_packages
 configure_sudo
 setup_work_directory
-
-cleanup
-minimize_disk
-minimize_swap

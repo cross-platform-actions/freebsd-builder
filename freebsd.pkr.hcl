@@ -182,4 +182,17 @@ build {
       "OS_VERSION=${var.os_version}"
     ]
   }
+
+  provisioner "shell" {
+    script = "resources/custom.sh"
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+    environment_vars = [
+      "SECONDARY_USER_USERNAME=${var.secondary_user_username}"
+    ]
+  }
+
+  provisioner "shell" {
+    script = "resources/cleanup.sh"
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+  }
 }
