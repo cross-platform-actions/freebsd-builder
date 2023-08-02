@@ -133,9 +133,6 @@ source "qemu" "qemu" {
     "dhclient -l /tmp/dhclient.leases -p /tmp/dhclient.pid vtnet0<enter><wait5>",
     "fetch -o /tmp/installerconfig http://{{.HTTPIP}}:{{.HTTPPort}}/resources/installerconfig<enter><wait>",
     "ROOT_PASSWORD=${var.root_password} ",
-    "OS_VERSION=${var.os_version} ",
-    "SECONDARY_USER_USERNAME=${var.secondary_user_username} ",
-    "SECONDARY_USER_PASSWORD=${var.secondary_user_password} ",
     "bsdinstall script /tmp/installerconfig && reboot<enter>"
   ]
 
@@ -178,8 +175,7 @@ build {
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
     environment_vars = [
       "SECONDARY_USER_USERNAME=${var.secondary_user_username}",
-      "SECONDARY_USER_PASSWORD=${var.secondary_user_password}",
-      "OS_VERSION=${var.os_version}"
+      "SECONDARY_USER_PASSWORD=${var.secondary_user_password}"
     ]
   }
 
