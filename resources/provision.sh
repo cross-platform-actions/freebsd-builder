@@ -89,21 +89,9 @@ setup_secondary_user() {
   echo "$SECONDARY_USER_PASSWORD" | pw useradd "$SECONDARY_USER_USERNAME" -h 0 -m -s "$SHELL"
 }
 
-setup_work_directory() {
-  local work_directory=/Users/runner/work
-  local permissions="$SECONDARY_USER_USERNAME:$SECONDARY_USER_USERNAME"
-
-  mkdir -p "$work_directory"
-  chown "$permissions" "$work_directory"
-
-  ln -s "$work_directory/" "/usr/home/$SECONDARY_USER_USERNAME/work"
-  chown "$permissions" "$work_directory"
-}
-
 setup_secondary_user
 configure_boot_flags
 configure_sendmail
 configure_boot_scripts
 install_extra_packages
 configure_sudo
-setup_work_directory
