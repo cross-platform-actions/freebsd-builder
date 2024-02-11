@@ -4,6 +4,7 @@ set -exu
 
 cleanup() {
   pkg clean -a -y
+  sed -i '' 's/signature_type: "none"/signature_type: "fingerprints"/' /etc/pkg/FreeBSD.conf
 }
 
 minimize_disk() {

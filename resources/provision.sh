@@ -1,6 +1,14 @@
 #!/bin/sh
 
+# Environment variables:
+# OS_VERSION: the version of FreeBSD
+# SECONDARY_USER_USERNAME: the username of the secondary user to create
+# SECONDARY_USER_PASSWORD: the password of the secondary
+# PKG_SITE_ARCHITECTURE: the name of the architecture used by the pkg site: http://pkg.freebsd.org
+
 set -exu
+
+ABI_VERSION="$(echo $OS_VERSION | cut -d . -f 1)"
 
 configure_boot_flags() {
   cat <<EOF >> /boot/loader.conf
@@ -72,8 +80,50 @@ EOF
   chmod +x "$script"
 }
 
+upstream_pkg_site_available() {
+  local package_site="http://pkg.FreeBSD.org/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/quarterly/Latest"
+
+  fetch \
+    --one-file \
+    --print-size \
+    "$package_site/pkg.pkg" \
+    "$package_site/pkg.txz" \
+    2> /dev/null
+}
+
+bootstrap_pkg() {
+  local device_version="$(echo "$OS_VERSION" | sed 's/\./_/')"
+  local device_arch="$(echo "$PKG_SITE_ARCHITECTURE" | tr '[:lower:]' '[:upper:]')"
+
+  if [ -e /dev/cd0 ]; then
+    local device_path=/dev/cd0
+  elif [ -e "/dev/iso9660/${device_version}_RELEASE_${device_arch}_DVD" ]; then
+    local device_path="/dev/iso9660/${device_version}_RELEASE_${device_arch}_DVD"
+  else
+    echo "ERROR: There is no DVD/CDROM device available to mount" >&2
+    exit 1
+  fi
+
+  sed -i '' 's/signature_type: "fingerprints"/signature_type: "none"/' /etc/pkg/FreeBSD.conf
+  mount -t cd9660 "$device_path" /mnt
+  export PACKAGESITE="file:///mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE"
+  ASSUME_ALWAYS_YES=yes pkg bootstrap
+}
+
+install_local_package() {
+  ASSUME_ALWAYS_YES=yes pkg add "/mnt/packages/FreeBSD:12:amd64/All/$1"-[0123456789]*
+}
+
 install_extra_packages() {
-  ASSUME_ALWAYS_YES=yes pkg install sudo bash curl rsync
+  if upstream_pkg_site_available; then
+    ASSUME_ALWAYS_YES=yes pkg install sudo bash curl rsync
+  else
+    bootstrap_pkg
+    install_local_package sudo
+    install_local_package bash
+    install_local_package curl
+    install_local_package rsync
+  fi
 }
 
 configure_sudo() {

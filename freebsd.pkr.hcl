@@ -21,6 +21,11 @@ variable "qemu_architecture" {
   description = "The name of the architecture in the QEMU binary"
 }
 
+variable "pkg_site_architecture" {
+  type = string
+  description = "The name of the architecture used by the pkg site: http://pkg.freebsd.org"
+}
+
 variable "machine_type" {
   default = "pc"
   type = string
@@ -103,7 +108,7 @@ variable "firmware" {
 
 locals {
   vm_name = "freebsd-${var.os_version}-${var.architecture}.qcow2"
-  iso_path = "ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${var.image_architecture}-disc1.iso"
+  iso_path = "ISO-IMAGES/${var.os_version}/FreeBSD-${var.os_version}-RELEASE-${var.image_architecture}-dvd1.iso"
 }
 
 source "qemu" "qemu" {
@@ -124,7 +129,7 @@ source "qemu" "qemu" {
   qemu_binary = "qemu-system-${var.qemu_architecture}"
   firmware = var.firmware
 
-  boot_wait = "5s"
+  boot_wait = "6s"
 
   boot_command = [
     "2<wait30s>",
@@ -149,6 +154,7 @@ source "qemu" "qemu" {
   iso_checksum = var.checksum
   iso_urls = [
     "http://ftp.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
+    "http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/${local.iso_path}",
     "http://ftp4.se.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp2.de.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp.lv.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
@@ -157,8 +163,7 @@ source "qemu" "qemu" {
     "http://ftp6.tw.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp11.tw.freebsd.org/FreeBSD/releases/${local.iso_path}",
     "http://ftp2.br.freebsd.org/FreeBSD/releases/${local.iso_path}",
-    "http://ftp.at.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
-    "http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/${local.iso_path}"
+    "http://ftp.at.freebsd.org/pub/FreeBSD/releases/${local.iso_path}"
   ]
 
   http_directory = "."
@@ -175,7 +180,9 @@ build {
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
     environment_vars = [
       "SECONDARY_USER_USERNAME=${var.secondary_user_username}",
-      "SECONDARY_USER_PASSWORD=${var.secondary_user_password}"
+      "SECONDARY_USER_PASSWORD=${var.secondary_user_password}",
+      "OS_VERSION=${var.os_version}",
+      "PKG_SITE_ARCHITECTURE=${var.pkg_site_architecture}"
     ]
   }
 
