@@ -21,11 +21,8 @@ cat <<EOF > /etc/resolv.conf
 nameserver 8.8.8.8
 EOF
 
-interface=$(route get default | awk '/interface/ { print $2 }')
-cat <<EOF >> /etc/rc.conf
-ifconfig_${interface}="DHCP"
-sshd_enable="YES"
-EOF
+sysrc ifconfig_DEFAULT=DHCP
+sysrc sshd_enable=YES
 }
 
 configure_ssh() {
