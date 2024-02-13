@@ -159,10 +159,6 @@ source "qemu" "qemu" {
     "http://ftp2.de.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp.lv.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp4.us.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
-    "http://ftp13.us.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
-    "http://ftp6.tw.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
-    "http://ftp11.tw.freebsd.org/FreeBSD/releases/${local.iso_path}",
-    "http://ftp2.br.freebsd.org/FreeBSD/releases/${local.iso_path}",
     "http://ftp.at.freebsd.org/pub/FreeBSD/releases/${local.iso_path}"
   ]
 
