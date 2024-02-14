@@ -12,7 +12,7 @@ jobs:
   build:
     name: ${{ matrix.version }} ${{ matrix.architecture.name }}
     runs-on: ubuntu-latest
-    container: ubuntu:22.04
+    container: alpine:edge
     strategy:
         fail-fast: false
         matrix:
@@ -25,7 +25,7 @@ jobs:
 
           architecture:
             - name: x86-64
-              qemu: x86
+              qemu: x86_64
 
             - name: arm64
               qemu: aarch64
@@ -46,7 +46,7 @@ jobs:
             - version: '12.4'
               architecture:
                 name: x86-64
-                qemu: x86
+                qemu: x86_64
 
     steps:
       - name: Clone Repository
@@ -56,9 +56,10 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          apt update && \
-          apt install curl jq unzip \
-          "qemu-system-${{ matrix.architecture.qemu }}" -y
+          apk add --no-cache \
+            curl \
+            qemu-img \
+            "qemu-system-${{ matrix.architecture.qemu }}"
 
       - uses: hashicorp/setup-packer@main
         with:
@@ -68,10 +69,6 @@ jobs:
       #   uses: mxschmitt/action-tmate@v3
       #   with:
       #     limit-access-to-actor: true
-
-      - name: Install UEFI
-        if: matrix.architecture.name == 'arm64'
-        run: cp "$(cat /usr/share/qemu/firmware/60-edk2-aarch64.json | jq .mapping.executable.filename -r)" edk2-aarch64-code.fd
 
       - name: Build Image
         if: '!matrix.copy_from_previous_release'
