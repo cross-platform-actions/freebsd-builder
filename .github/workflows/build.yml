@@ -12,93 +12,93 @@ jobs:
   build:
     name: ${{ matrix.version }} ${{ matrix.architecture.name }}
     runs-on: ubuntu-latest
-    container: alpine:edge
+    # container: alpine:edge
     strategy:
         fail-fast: false
         matrix:
           version:
             - '12.2'
-            - '13.0'
-            - '13.1'
-            - '13.2'
-            - '14.0'
+            # - '13.0'
+            # - '13.1'
+            # - '13.2'
+            # - '14.0'
 
-          architecture:
-            - name: x86-64
-              qemu: x86_64
-
-            - name: arm64
-              qemu: aarch64
-
-          exclude:
-            - version: '12.2'
-              architecture:
-                name: arm64
-                qemu: aarch64
-
-          include:
-            - version: '12.4'
-              copy_from_previous_release: true
-              architecture:
-                name: arm64
-                qemu: aarch64
-
-            - version: '12.4'
-              architecture:
-                name: x86-64
-                qemu: x86_64
+          # architecture:
+          #   - name: x86-64
+          #     qemu: x86_64
+          #
+          #   - name: arm64
+          #     qemu: aarch64
+          #
+          # exclude:
+          #   - version: '12.2'
+          #     architecture:
+          #       name: arm64
+          #       qemu: aarch64
+          #
+          # include:
+          #   - version: '12.4'
+          #     copy_from_previous_release: true
+          #     architecture:
+          #       name: arm64
+          #       qemu: aarch64
+          #
+          #   - version: '12.4'
+          #     architecture:
+          #       name: x86-64
+          #       qemu: x86_64
 
     steps:
-      - name: Clone Repository
-        uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-
-      - name: Install Dependencies
-        run: |
-          apk add --no-cache \
-            curl \
-            qemu-img \
-            "qemu-system-${{ matrix.architecture.qemu }}"
-
-      - uses: hashicorp/setup-packer@main
-        with:
-          version: "1.9.1"
-
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
+      # - name: Clone Repository
+      #   uses: actions/checkout@v3
       #   with:
-      #     limit-access-to-actor: true
+      #     persist-credentials: false
+      #
+      # - name: Install Dependencies
+      #   run: |
+      #     apk add --no-cache \
+      #       curl \
+      #       qemu-img \
+      #       "qemu-system-${{ matrix.architecture.qemu }}"
+      #
+      # - uses: hashicorp/setup-packer@main
+      #   with:
+      #     version: "1.9.1"
 
-      - name: Build Image
-        if: '!matrix.copy_from_previous_release'
-        env:
-          PACKER_LOG: 1
-        run: |
-          ./build.sh '${{ matrix.version }}' '${{ matrix.architecture.name }}' \
-            -var 'headless=true'
-
-      - name: Copy from previous release
-        if: matrix.copy_from_previous_release
-        run: |
-          curl -O -L \
-            --retry 3 \
-            --create-dirs \
-            --output-dir output \
-            https://github.com/cross-platform-actions/freebsd-builder/releases/download/v0.5.0/freebsd-${{ matrix.version }}-${{ matrix.architecture.name }}.qcow2
-
-      - name: Extract Version
-        id: version
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
-
-      - name: Create Release
-        id: create_release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
         with:
-          name: FreeBSD ${{ steps.version.outputs.VERSION }}
-          draft: true
-          files: output/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          limit-access-to-actor: true
+
+      # - name: Build Image
+      #   if: '!matrix.copy_from_previous_release'
+      #   env:
+      #     PACKER_LOG: 1
+      #   run: |
+      #     ./build.sh '${{ matrix.version }}' '${{ matrix.architecture.name }}' \
+      #       -var 'headless=true'
+      #
+      # - name: Copy from previous release
+      #   if: matrix.copy_from_previous_release
+      #   run: |
+      #     curl -O -L \
+      #       --retry 3 \
+      #       --create-dirs \
+      #       --output-dir output \
+      #       https://github.com/cross-platform-actions/freebsd-builder/releases/download/v0.5.0/freebsd-${{ matrix.version }}-${{ matrix.architecture.name }}.qcow2
+      #
+      # - name: Extract Version
+      #   id: version
+      #   if: startsWith(github.ref, 'refs/tags/v')
+      #   run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
+      #
+      # - name: Create Release
+      #   id: create_release
+      #   if: startsWith(github.ref, 'refs/tags/v')
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     name: FreeBSD ${{ steps.version.outputs.VERSION }}
+      #     draft: true
+      #     files: output/*
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
