@@ -125,7 +125,7 @@ source "qemu" "qemu" {
   headless = var.headless
   use_default_display = var.use_default_display
   display = var.display
-  accelerator = var.accelerator
+  accelerator = "none" // we manually specify multiple accelerators below
   qemu_binary = "qemu-system-${var.qemu_architecture}"
   firmware = var.firmware
 
@@ -148,7 +148,10 @@ source "qemu" "qemu" {
   qemuargs = [
     ["-cpu", var.cpu_type],
     ["-boot", "strict=off"],
-    ["-monitor", "none"]
+    ["-monitor", "none"],
+    ["-accel", "hvf"],
+    ["-accel", "kvm"],
+    ["-accel", "tcg"]
   ]
 
   iso_checksum = var.checksum
