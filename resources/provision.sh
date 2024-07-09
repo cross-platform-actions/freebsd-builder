@@ -49,7 +49,7 @@ is_mounted() {
 }
 
 mount_resources_disk() {
-  local disks=\$(sysctl kern.disks | cut -d : -f 2 | sed 's/ /\n/g' | tail -n +2)
+  local disks=\$(sysctl kern.disks | cut -d : -f 2 | tr ' ' '\n' | tail -n +2)
   local mounts=\$(mount)
 
   echo "\$disks" | while read disk; do
@@ -111,7 +111,7 @@ bootstrap_pkg() {
 }
 
 install_local_package() {
-  ASSUME_ALWAYS_YES=yes pkg add "/mnt/packages/FreeBSD:12:amd64/All/$1"-[0123456789]*
+  ASSUME_ALWAYS_YES=yes pkg add "/mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/All/$1"-[0123456789]*
 }
 
 install_extra_packages() {
