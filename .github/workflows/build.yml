@@ -19,6 +19,7 @@ jobs:
         fail-fast: false
         matrix:
           version:
+            - '11.2'
             - '12.2'
             - '13.0'
             - '13.1'
@@ -35,6 +36,11 @@ jobs:
               qemu: aarch64
 
           exclude:
+            - version: '11.2'
+              architecture:
+                name: arm64
+                qemu: aarch64
+
             - version: '12.2'
               architecture:
                 name: arm64
