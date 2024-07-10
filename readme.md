@@ -8,9 +8,9 @@ expectations of running X.
 In addition to standard installation, the following packages are installed as
 well:
 
-- sudo
-- bash
-- curl
+* sudo
+* bash
+* curl
 
 Except for the root user, there's one additional user, `runner`, which is the
 user that will be running the commands in the GitHub action. This user is
@@ -21,7 +21,7 @@ allowed use `sudo` without a password.
 The following architectures and versions are supported:
 
 | Version | x86-64 | ARM64 |
-| ------- | ------ | ----- |
+|---------|--------|-------|
 | 14.1    | ✓      | ✓     |
 | 14.0    | ✓      | ✓     |
 | 13.3    | ✓      | ✓     |
@@ -36,24 +36,23 @@ The following architectures and versions are supported:
 
 ### Prerequisite
 
-- [Packer](https://www.packer.io) 1.9.1 or later
-- [QEMU](https://qemu.org)
+* [Packer](https://www.packer.io) 1.9.1 or later
+* [QEMU](https://qemu.org)
 
 ### Building
 
 1. Clone the repository:
-
-   ```
-   git clone https://github.com/cross-platform-actions/freebsd-builder
-   cd freebsd-builder
-   ```
+    ```
+    git clone https://github.com/cross-platform-actions/freebsd-builder
+    cd freebsd-builder
+    ```
 
 2. Run `build.sh` to build the image:
-   ```
-   ./build.sh <version> <architecture>
-   ```
-   Where `<version>` and `<architecture>` are the any of the versions or
-   architectures available in the above table.
+    ```
+    ./build.sh <version> <architecture>
+    ```
+    Where `<version>` and `<architecture>` are the any of the versions or
+    architectures available in the above table.
 
 The above command will build the VM image and the resulting disk image will be
 at the path: `output/freebsd-<version>-<architecture>.qcow2`.
