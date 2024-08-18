@@ -24,6 +24,7 @@ The following architectures and versions are supported:
 |---------|--------|-------|
 | 14.1    | ✓      | ✓     |
 | 14.0    | ✓      | ✓     |
+| 13.4    | ✓      | ✓     |
 | 13.3    | ✓      | ✓     |
 | 13.2    | ✓      | ✓     |
 | 13.1    | ✓      | ✓     |
