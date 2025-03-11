@@ -156,11 +156,11 @@ source "qemu" "qemu" {
 
   iso_checksum = var.checksum
   iso_urls = [
-    "http://ftp.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
+    "https://ftp.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "https://archive.freebsd.org/old-releases/${local.iso_path}",
     "http://ftp4.se.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp2.de.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
-    "http://ftp.lv.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
+    "https://ftp.lv.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp4.us.freebsd.org/pub/FreeBSD/releases/${local.iso_path}",
     "http://ftp.at.freebsd.org/pub/FreeBSD/releases/${local.iso_path}"
   ]
