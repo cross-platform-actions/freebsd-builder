@@ -81,14 +81,23 @@ EOF
 }
 
 upstream_pkg_site_available() {
+  if [ "$OS_VERSION" = "13.0" ]; then
+    upstream_package_available "pkg.txz"
+    return
+  fi
+
+  upstream_package_available "pkg.pkg" || upstream_package_available "pkg.txz"
+}
+
+upstream_package_available() {
+  local package_name="$1"
   local package_site="http://pkg.FreeBSD.org/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/quarterly/Latest"
 
   fetch \
-    --one-file \
     --print-size \
-    "$package_site/pkg.pkg" \
-    "$package_site/pkg.txz" \
-    2> /dev/null
+    "$package_site/$package_name" \
+    "$package_site/$package_name.sig" \
+    > /dev/null 2>&1
 }
 
 bootstrap_pkg() {
@@ -111,7 +120,7 @@ bootstrap_pkg() {
 }
 
 install_local_package() {
-  ASSUME_ALWAYS_YES=yes pkg add "/mnt/packages/FreeBSD:12:amd64/All/$1"-[0123456789]*
+  ASSUME_ALWAYS_YES=yes pkg add "/mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/All/$1"-[0123456789]*
 }
 
 install_extra_packages() {
