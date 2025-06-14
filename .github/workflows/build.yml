@@ -14,7 +14,6 @@ jobs:
   build:
     name: ${{ matrix.version }} ${{ matrix.architecture.name }}
     runs-on: ubuntu-latest
-    container: alpine:edge
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +31,8 @@ jobs:
 
         architecture:
           - name: x86-64
-            qemu: x86_64
+            qemu: x86
+            uname: amd64
 
           - name: arm64
             qemu: aarch64
@@ -53,7 +53,8 @@ jobs:
           - version: '12.4'
             architecture:
               name: x86-64
-              qemu: x86_64
+              qemu: x86
+              uname: amd64
 
     steps:
       - name: Clone Repository
@@ -63,10 +64,18 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          apk add --no-cache \
-            curl \
-            qemu-img \
-            "qemu-system-${{ matrix.architecture.qemu }}"
+          sudo apt update && \
+          sudo apt install -y \
+          fdisk \
+          dosfstools \
+          rsync \
+          curl \
+          python3 \
+          qemu-system-${{ matrix.architecture.qemu }}
+
+          if [ -f /usr/share/qemu-efi-aarch64/QEMU_EFI.fd ]; then
+            sudo ln -s /usr/share/qemu-efi-aarch64/QEMU_EFI.fd /usr/share/qemu/edk2-aarch64-code.fd
+          fi
 
       - uses: hashicorp/setup-packer@main
         with:
@@ -93,6 +102,43 @@ jobs:
             --create-dirs \
             --output-dir output \
             https://github.com/cross-platform-actions/freebsd-builder/releases/download/v0.5.0/freebsd-${{ matrix.version }}-${{ matrix.architecture.name }}.qcow2
+
+      - name: Start Local HTTP Server
+        run: python3 -m http.server 8080 --directory output &
+
+      - name: Create File
+        run: echo 'host to guest' > host_to_guest.txt
+
+      - name: Test Image
+        uses: cross-platform-actions/action@master
+        with:
+          operating_system: freebsd
+          architecture: ${{ matrix.architecture.name }}
+          version: '${{ matrix.version }}'
+          image_url: http://localhost:8080/freebsd-${{ matrix.version }}-${{ matrix.architecture.name }}.qcow2
+          shutdown_vm: false
+          shell: bash
+          run: |
+            echo "uname -a = $(uname -a)"
+            echo "uname -s = $(uname -s)"
+            echo "uname -r = $(uname -r)"
+            echo "uname -v = $(uname -v)"
+            echo "uname -m = $(uname -m)"
+            echo "uname -p = $(uname -p)"
+            pwd
+            echo $SHELL
+            ls -lah
+            whoami
+            env | sort
+            [ "`uname -s`" = 'FreeBSD' ]
+            [ "`uname -r`" = '${{ matrix.version}}-RELEASE' ]
+            [ "`uname -m`" = '${{ matrix.architecture.uname || matrix.architecture.name }}' ]
+            [ "`pwd`" = '/home/runner/work/freebsd-builder/freebsd-builder' ] || [ "`pwd`" = '/usr/home/runner/work/freebsd-builder/freebsd-builder' ]
+            cat host_to_guest.txt | grep -q 'host to guest'
+            echo 'guest to host' > guest_to_host.txt
+
+      - name: Verify File Synchronization
+        run: cat guest_to_host.txt | grep -q 'guest to host'
 
       - name: Extract Version
         id: version
