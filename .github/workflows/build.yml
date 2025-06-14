@@ -16,44 +16,44 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:edge
     strategy:
-        fail-fast: false
-        matrix:
-          version:
-            - '12.2'
-            - '13.0'
-            - '13.1'
-            - '13.2'
-            - '13.3'
-            - '13.4'
-            - '13.5'
-            - '14.0'
-            - '14.1'
-            - '14.2'
+      fail-fast: false
+      matrix:
+        version:
+          - '12.2'
+          - '13.0'
+          - '13.1'
+          - '13.2'
+          - '13.3'
+          - '13.4'
+          - '13.5'
+          - '14.0'
+          - '14.1'
+          - '14.2'
 
-          architecture:
-            - name: x86-64
-              qemu: x86_64
+        architecture:
+          - name: x86-64
+            qemu: x86_64
 
-            - name: arm64
+          - name: arm64
+            qemu: aarch64
+
+        exclude:
+          - version: '12.2'
+            architecture:
+              name: arm64
               qemu: aarch64
 
-          exclude:
-            - version: '12.2'
-              architecture:
-                name: arm64
-                qemu: aarch64
+        include:
+          - version: '12.4'
+            copy_from_previous_release: true
+            architecture:
+              name: arm64
+              qemu: aarch64
 
-          include:
-            - version: '12.4'
-              copy_from_previous_release: true
-              architecture:
-                name: arm64
-                qemu: aarch64
-
-            - version: '12.4'
-              architecture:
-                name: x86-64
-                qemu: x86_64
+          - version: '12.4'
+            architecture:
+              name: x86-64
+              qemu: x86_64
 
     steps:
       - name: Clone Repository
