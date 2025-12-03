@@ -174,7 +174,7 @@ source "qemu" "qemu" {
 packer {
   required_plugins {
     qemu = {
-      version = "~> 1.1.4"
+      version = "~> 1.1.3"
       source = "github.com/hashicorp/qemu"
     }
   }
