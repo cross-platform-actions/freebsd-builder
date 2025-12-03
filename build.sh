@@ -7,6 +7,8 @@ ARCHITECTURE="$1"; shift
 
 packer init .
 
+export PACKER_GETTER_READ_TIMEOUT=60m
+
 packer build \
   -var os_version="$OS_VERSION" \
   -var-file "var_files/common.pkrvars.hcl" \
