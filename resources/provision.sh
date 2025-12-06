@@ -87,7 +87,7 @@ EOF
 }
 
 upstream_pkg_site_available() {
-  if [ "$OS_VERSION" = "13.0" ] && [ "$PKG_SITE_ARCHITECTURE" = "aarch64" ]; then
+  if [ "$OS_VERSION" = "13.0" ]; then
     if upstream_package_available "pkg.txz"; then
       return 0
     elif upstream_package_available "pkg.pkg"; then
