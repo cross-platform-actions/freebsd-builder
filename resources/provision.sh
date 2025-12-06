@@ -9,6 +9,12 @@
 set -exu
 
 ABI_VERSION="$(echo $OS_VERSION | cut -d . -f 1)"
+PACKAGE_SITE="https://pkg.FreeBSD.org/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/quarterly/Latest"
+IGNORE_OSVERSION=yes
+ASSUME_ALWAYS_YES=yes
+
+export IGNORE_OSVERSION
+export ASSUME_ALWAYS_YES
 
 configure_boot_flags() {
   cat <<EOF >> /boot/loader.conf
@@ -81,9 +87,15 @@ EOF
 }
 
 upstream_pkg_site_available() {
-  if [ "$OS_VERSION" = "13.0" ]; then
-    upstream_package_available "pkg.txz"
-    return
+  if [ "$OS_VERSION" = "13.0" ] && [ "$PKG_SITE_ARCHITECTURE" = "aarch64" ]; then
+    if upstream_package_available "pkg.txz"; then
+      return 0
+    elif upstream_package_available "pkg.pkg"; then
+      bootstrap_pkg_remote
+      return 0
+    else
+      return 1
+    fi
   fi
 
   upstream_package_available "pkg.pkg" || upstream_package_available "pkg.txz"
@@ -91,16 +103,23 @@ upstream_pkg_site_available() {
 
 upstream_package_available() {
   local package_name="$1"
-  local package_site="http://pkg.FreeBSD.org/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/quarterly/Latest"
 
   fetch \
     --print-size \
-    "$package_site/$package_name" \
-    "$package_site/$package_name.sig" \
+    "$PACKAGE_SITE/$package_name" \
+    "$PACKAGE_SITE/$package_name.sig" \
     > /dev/null 2>&1
 }
 
-bootstrap_pkg() {
+bootstrap_pkg_remote() {
+  pushd /tmp > /dev/null
+  fetch "$PACKAGE_SITE/pkg.pkg" "$PACKAGE_SITE/pkg.pkg.sig"
+  pkg add pkg.pkg
+  rm -f pkg.pkg pkg.pkg.sig
+  popd > /dev/null
+}
+
+bootstrap_pkg_install_media() {
   local device_version="$(echo "$OS_VERSION" | sed 's/\./_/')"
   local device_arch="$(echo "$PKG_SITE_ARCHITECTURE" | tr '[:lower:]' '[:upper:]')"
 
@@ -116,18 +135,18 @@ bootstrap_pkg() {
   sed -i '' 's/signature_type: "fingerprints"/signature_type: "none"/' /etc/pkg/FreeBSD.conf
   mount -t cd9660 "$device_path" /mnt
   export PACKAGESITE="file:///mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE"
-  ASSUME_ALWAYS_YES=yes pkg bootstrap
+  pkg bootstrap
 }
 
 install_local_package() {
-  ASSUME_ALWAYS_YES=yes pkg add "/mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/All/$1"-[0123456789]*
+  pkg add "/mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/All/$1"-[0123456789]*
 }
 
 install_extra_packages() {
   if upstream_pkg_site_available; then
-    ASSUME_ALWAYS_YES=yes pkg install sudo bash curl rsync
+    pkg install sudo bash curl rsync
   else
-    bootstrap_pkg
+    bootstrap_pkg_install_media
     install_local_package sudo
     install_local_package bash
     install_local_package curl
