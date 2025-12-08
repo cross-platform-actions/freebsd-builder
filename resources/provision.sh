@@ -24,12 +24,10 @@ EOF
 }
 
 configure_sendmail() {
-  tee -a /etc/rc.conf <<EOF
-sendmail_enable="NO"
-sendmail_submit_enable="NO"
-sendmail_outbound_enable="NO"
-sendmail_msp_queue_enable="NO"
-EOF
+  sysrc sendmail_enable=NO
+  sysrc sendmail_submit_enable=NO
+  sysrc sendmail_outbound_enable=NO
+  sysrc sendmail_msp_queue_enable=NO
 }
 
 configure_boot_scripts() {

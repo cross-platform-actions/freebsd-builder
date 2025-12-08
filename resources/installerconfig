@@ -46,9 +46,7 @@ configure_timezone() {
 }
 
 configure_ntpd() {
-cat <<EOF >> /etc/rc.conf
-ntpd_enable="YES"
-EOF
+  sysrc ntpd_enable=YES
 }
 
 configure_network
