@@ -49,9 +49,14 @@ configure_ntpd() {
   sysrc ntpd_enable=YES
 }
 
+set_hostname() {
+  sysrc hostname='runnervmg1sw1.local'
+}
+
 configure_network
 configure_ssh
 configure_root_user
 configure_timezone
 configure_ntpd
+set_hostname
 reboot

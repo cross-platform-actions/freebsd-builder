@@ -17,6 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        expected_hostname: [runnervmg1sw1.local]
         version:
           - '12.2'
           - '13.0'
@@ -48,11 +49,13 @@ jobs:
         include:
           - version: '12.4'
             copy_from_previous_release: true
+            expected_hostname: ''
             architecture:
               name: arm64
               qemu: aarch64
 
           - version: '12.4'
+            expected_hostname: runnervmg1sw1.local
             architecture:
               name: x86-64
               qemu: x86
@@ -130,6 +133,7 @@ jobs:
             echo "uname -p = $(uname -p)"
             pwd
             echo $SHELL
+            hostname -f
             ls -lah
             whoami
             env | sort
@@ -137,6 +141,7 @@ jobs:
             [ "`uname -r`" = '${{ matrix.version}}-RELEASE' ]
             [ "`uname -m`" = '${{ matrix.architecture.uname || matrix.architecture.name }}' ]
             [ "`pwd`" = '/home/runner/work/freebsd-builder/freebsd-builder' ] || [ "`pwd`" = '/usr/home/runner/work/freebsd-builder/freebsd-builder' ]
+            [ "`hostname -f`" = '${{ matrix.expected_hostname }}' ]
             cat host_to_guest.txt | grep -q 'host to guest'
             echo 'guest to host' > guest_to_host.txt
 
