@@ -121,6 +121,7 @@ jobs:
           shutdown_vm: false
           shell: bash
           run: |
+            set -x
             echo "uname -a = $(uname -a)"
             echo "uname -s = $(uname -s)"
             echo "uname -r = $(uname -r)"
