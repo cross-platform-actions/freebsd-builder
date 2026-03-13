@@ -3,7 +3,6 @@
 # Environment variables:
 # OS_VERSION: the version of FreeBSD
 # SECONDARY_USER_USERNAME: the username of the secondary user to create
-# SECONDARY_USER_PASSWORD: the password of the secondary
 # PKG_SITE_ARCHITECTURE: the name of the architecture used by the pkg site: http://pkg.freebsd.org
 
 set -exu
@@ -28,60 +27,6 @@ configure_sendmail() {
   sysrc sendmail_submit_enable=NO
   sysrc sendmail_outbound_enable=NO
   sysrc sendmail_msp_queue_enable=NO
-}
-
-configure_boot_scripts() {
-  local rc_dir=/usr/local/etc/rc.d
-  local script="$rc_dir/install_authorized_keys.sh"
-
-  mkdir -p "$rc_dir"
-
-  cat <<EOF >> "$script"
-#!/usr/local/bin/bash
-
-RESOURCES_MOUNT_PATH='/mnt/resources'
-
-is_mounted() {
-  local disk="\$1"
-
-  return \$(
-    echo "\$mounts" | while read mount; do
-      [[ "\$mount" == "/dev/\$disk"* ]] && return 0
-      return 1
-    done
-  )
-}
-
-mount_resources_disk() {
-  local disks=\$(sysctl kern.disks | cut -d : -f 2 | sed 's/ /\n/g' | tail -n +2)
-  local mounts=\$(mount)
-
-  echo "\$disks" | while read disk; do
-    is_mounted "\$disk" && continue
-
-    find /dev -name "\$disk*" | while read dev; do
-      [ "\$dev" = "/dev/\$disk" ] && continue
-      mkdir -p /mnt/resources
-      mount_msdosfs "\$dev" /mnt/resources
-      break
-    done
-  done
-}
-
-install_authorized_keys() {
-  if [ -s "\$RESOURCES_MOUNT_PATH/KEYS" ]; then
-    mkdir -p "/home/$SECONDARY_USER_USERNAME/.ssh"
-    cp "\$RESOURCES_MOUNT_PATH/keys" "/home/$SECONDARY_USER_USERNAME/.ssh/authorized_keys"
-    chown "$SECONDARY_USER_USERNAME:$SECONDARY_USER_USERNAME" "/home/$SECONDARY_USER_USERNAME/.ssh/authorized_keys"
-    chmod 600 "/home/$SECONDARY_USER_USERNAME/.ssh/authorized_keys"
-  fi
-}
-
-mount_resources_disk
-install_authorized_keys
-EOF
-
-  chmod +x "$script"
 }
 
 upstream_pkg_site_available() {
@@ -162,12 +107,11 @@ EOF
 }
 
 setup_secondary_user() {
-  echo "$SECONDARY_USER_PASSWORD" | pw useradd "$SECONDARY_USER_USERNAME" -h 0 -m -s "$SHELL"
+  pw useradd "$SECONDARY_USER_USERNAME" -m -s "$SHELL" -w none
 }
 
 setup_secondary_user
 configure_boot_flags
 configure_sendmail
-configure_boot_scripts
 install_extra_packages
 configure_sudo

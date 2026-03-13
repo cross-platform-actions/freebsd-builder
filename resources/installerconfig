@@ -29,9 +29,14 @@ configure_ssh() {
   tee -a /etc/ssh/sshd_config <<EOF
 PermitRootLogin yes
 PasswordAuthentication yes
+PermitEmptyPasswords yes
 UseDNS no
 AcceptEnv *
 EOF
+
+  # FreeBSD's pam_unix.so rejects empty passwords unless `nullok` is set,
+  # which would otherwise prevent passwordless SSH login for the secondary user.
+  sed -i '' '/^auth.*pam_unix\.so/ s/$/ nullok/' /etc/pam.d/sshd
 }
 
 configure_root_user() {

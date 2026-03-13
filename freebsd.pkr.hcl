@@ -67,12 +67,6 @@ variable "root_password" {
   description = "The password for the root user"
 }
 
-variable "secondary_user_password" {
-  default = "vagrant"
-  type = string
-  description = "The password for the `secondary_user_username` user"
-}
-
 variable "secondary_user_username" {
   default = "vagrant"
   type = string
@@ -188,7 +182,6 @@ build {
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
     environment_vars = [
       "SECONDARY_USER_USERNAME=${var.secondary_user_username}",
-      "SECONDARY_USER_PASSWORD=${var.secondary_user_password}",
       "OS_VERSION=${var.os_version}",
       "PKG_SITE_ARCHITECTURE=${var.pkg_site_architecture}"
     ]
