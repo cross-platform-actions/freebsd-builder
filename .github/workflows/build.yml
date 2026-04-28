@@ -149,18 +149,17 @@ jobs:
       - name: Verify File Synchronization
         run: cat guest_to_host.txt | grep -q 'guest to host'
 
-      - name: Extract Version
-        id: version
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
       - name: Create Release
-        id: create_release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          name: FreeBSD ${{ steps.version.outputs.VERSION }}
-          draft: true
-          files: output/*
+        if: github.ref_type == 'tag'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_ref_name: ${{ github.ref_name }}
+        run: |
+          version="${github_ref_name#v}"
+          sed -n "/^## \[${version}\]/,/^## \[/{/^## \[${version}\]/d;/^## \[/d;p;}" changelog.md \
+            | gh release create \
+              "$github_ref_name" \
+              --title "FreeBSD ${version}" \
+              --draft \
+              --notes-file - \
+              output/*
