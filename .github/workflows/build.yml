@@ -156,10 +156,18 @@ jobs:
           github_ref_name: ${{ github.ref_name }}
         run: |
           version="${github_ref_name#v}"
-          sed -n "/^## \[${version}\]/,/^## \[/{/^## \[${version}\]/d;/^## \[/d;p;}" changelog.md \
-            | gh release create \
-              "$github_ref_name" \
-              --title "FreeBSD ${version}" \
-              --draft \
-              --notes-file - \
-              output/*
+
+          # Matrix jobs run in parallel; the first to arrive creates the
+          # draft release, the rest upload their artifacts to it.
+          # (gh release create with --draft does not deduplicate by tag.)
+          if gh release view "$github_ref_name" >/dev/null 2>&1; then
+            gh release upload "$github_ref_name" output/* --clobber
+          else
+            sed -n "/^## \[${version}\]/,/^## \[/{/^## \[${version}\]/d;/^## \[/d;p;}" changelog.md \
+              | gh release create \
+                "$github_ref_name" \
+                --title "FreeBSD ${version}" \
+                --draft \
+                --notes-file - \
+                output/*
+          fi
