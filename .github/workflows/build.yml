@@ -83,7 +83,7 @@ jobs:
             sudo ln -s /usr/share/qemu-efi-aarch64/QEMU_EFI.fd /usr/share/qemu/edk2-aarch64-code.fd
           fi
 
-      - uses: hashicorp/setup-packer@c3d53c525d422944e50ee27b840746d6522b08de # v3.2.0
+      - uses: hashicorp/setup-packer@3286471d6cc6756d056a0b199fea5e0becdbc189 # v3.3.0
         with:
           version: "1.9.1"
 
