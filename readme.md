@@ -69,36 +69,49 @@ at the path: `output/freebsd-<version>-<architecture>.qcow2`.
 
 The changelog is maintained in the [changelog.md](changelog.md) file, following
 the [Keep a Changelog] format. The changelog is updated incrementally. That is,
-for every new feature or bugfix, add an entry to the changelog. New entries are
-added below the [Unreleased] section, with an appropriate sub header.
+for every new feature or bugfix, add an entry to the changelog under the
+[Unreleased] section using an appropriate sub header (`Added`, `Changed`,
+`Deprecated`, `Removed`, `Fixed`, or `Security`).
+
+Entries under these sub headers determine the semantic version bump when the
+next release is cut with [relog].
 
 ### Creating a Release
 
-Make sure the [Unreleased] section of the changelog contains entries describing
-the changes to be released, then run:
+Releases are cut with [relog], driven by the [Unreleased] section of
+`changelog.md`. relog derives the next version from the sub headers under
+[Unreleased]:
+
+* `### Fixed` only → patch bump
+* `### Added`, `### Changed`, `### Deprecated` → minor bump
+* `### Removed` (or "Breaking" anywhere in the section) → major bump
+
+To cut a release, from a clean `master` working tree, run:
 
 ```
-bin/release
+relog
 ```
 
-The script will:
+To preview the changes without modifying anything:
 
-1. Determine the next version from the changelog's [Unreleased] section
-    (`Removed`/`Breaking` → major, `Added`/`Changed`/`Deprecated` → minor,
-    `Fixed` → patch). A version can also be passed explicitly as an argument.
-1. Update the changelog: rename [Unreleased] to the new version with today's
-    date, add a new empty [Unreleased] section, and update reference links.
-1. Commit the changelog and create an annotated tag (e.g. `v2.1.0`).
-1. Prompt before pushing `master` and the tag to origin.
+```
+relog --dry-run
+```
 
-Pass `--dry-run` to preview the changes without modifying anything.
+To override the auto-detected version:
 
-After pushing:
+```
+relog X.Y.Z
+```
 
-1. The CI workflow creates a draft release from the pushed tag, using the
-    newly added changelog section as the release notes.
-1. Check the draft release at GitHub to make sure everything looks good, then
-    publish it.
+relog rewrites the changelog, commits the result, creates an annotated `vX.Y.Z`
+tag, and prompts before pushing. Pushing the `vX.Y.Z` tag triggers the GitHub
+Actions workflow defined in
+[`.github/workflows/build.yml`](.github/workflows/build.yml), which builds the
+VM images and, in the "Create Release" step, creates a draft GitHub release
+using the newly added changelog section as the release notes. Review the draft
+release on GitHub and publish it.
 
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
+[relog]: https://github.com/jacob-carlborg/relog
 [Unreleased]: https://github.com/cross-platform-action/freebsd-builder/blob/master/changelog.md#unreleased
