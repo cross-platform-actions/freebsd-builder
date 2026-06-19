@@ -22,6 +22,7 @@ The following architectures and versions are supported:
 
 | Version | x86-64 | ARM64 |
 |---------|--------|-------|
+| 15.1    | ✓      | ✓     |
 | 15.0    | ✓      | ✓     |
 | 14.4    | ✓      | ✓     |
 | 14.3    | ✓      | ✓     |
