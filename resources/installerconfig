@@ -10,6 +10,7 @@ else
 fi
 
 DISTRIBUTIONS='kernel.txz base.txz'
+export BSDINSTALL_DISTSITE="${BSDINSTALL_DISTSITE:-http://ftp.freebsd.org/pub/FreeBSD/releases/$(uname -m)/$(uname -p)/$(uname -r)}"
 HOSTNAME=freebsd
 
 #!/bin/sh
@@ -64,4 +65,14 @@ configure_root_user
 configure_timezone
 configure_ntpd
 set_hostname
-reboot
+
+if [ "$(uname -p)" = "riscv64" ]; then
+  # On riscv64 the installer boots from the ISO in single-user mode.
+  # After install, rebooting may not reliably boot from the installed disk.
+  # Instead, start sshd here (in the chroot of the installed system) and
+  # block, allowing Packer to SSH in, run provisioners, and then shut down.
+  /etc/rc.d/sshd onestart
+  while true; do sleep 3600; done
+else
+  reboot
+fi

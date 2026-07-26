@@ -4,6 +4,7 @@
 # OS_VERSION: the version of FreeBSD
 # SECONDARY_USER_USERNAME: the username of the secondary user to create
 # PKG_SITE_ARCHITECTURE: the name of the architecture used by the pkg site: http://pkg.freebsd.org
+# CUSTOM_PKG_REPO: base URL of a custom pkg repository (optional)
 
 set -exu
 
@@ -62,17 +63,21 @@ bootstrap_pkg_remote() {
   popd > /dev/null
 }
 
+has_install_media() {
+  local device_version="$(echo "$OS_VERSION" | sed 's/\./_/')"
+  local device_arch="$(echo "$PKG_SITE_ARCHITECTURE" | tr '[:lower:]' '[:upper:]')"
+
+  [ -e /dev/cd0 ] || [ -e "/dev/iso9660/${device_version}_RELEASE_${device_arch}_DVD" ]
+}
+
 bootstrap_pkg_install_media() {
   local device_version="$(echo "$OS_VERSION" | sed 's/\./_/')"
   local device_arch="$(echo "$PKG_SITE_ARCHITECTURE" | tr '[:lower:]' '[:upper:]')"
 
   if [ -e /dev/cd0 ]; then
     local device_path=/dev/cd0
-  elif [ -e "/dev/iso9660/${device_version}_RELEASE_${device_arch}_DVD" ]; then
-    local device_path="/dev/iso9660/${device_version}_RELEASE_${device_arch}_DVD"
   else
-    echo "ERROR: There is no DVD/CDROM device available to mount" >&2
-    exit 1
+    local device_path="/dev/iso9660/${device_version}_RELEASE_${device_arch}_DVD"
   fi
 
   sed -i '' 's/signature_type: "fingerprints"/signature_type: "none"/' /etc/pkg/FreeBSD.conf
@@ -85,25 +90,59 @@ install_local_package() {
   pkg add "/mnt/packages/FreeBSD:$ABI_VERSION:$PKG_SITE_ARCHITECTURE/All/$1"-[0123456789]*
 }
 
+configure_custom_pkg_repo() {
+  local repo_url="$1"
+
+  mkdir -p /usr/local/etc/pkg/repos
+  cat <<EOF > /usr/local/etc/pkg/repos/custom.conf
+custom: {
+  url: "${repo_url}\${ABI}",
+  enabled: yes,
+  signature_type: "none"
+}
+EOF
+
+  # Disable the default upstream repos since they may not carry this
+  # architecture (e.g. riscv64). FreeBSD <= 14 ships a single "FreeBSD" repo;
+  # 15.0 replaced it with "FreeBSD-ports" and "FreeBSD-ports-kmods". Disabling a
+  # name that does not exist on a given release is harmless, so list them all -
+  # otherwise an enabled-but-unreachable repo makes "pkg update" exit non-zero.
+  cat <<EOF > /usr/local/etc/pkg/repos/FreeBSD.conf
+FreeBSD: { enabled: no }
+FreeBSD-ports: { enabled: no }
+FreeBSD-ports-kmods: { enabled: no }
+EOF
+
+  pkg update
+}
+
 install_extra_packages() {
   if upstream_pkg_site_available; then
     pkg install sudo bash curl rsync
-  else
+  elif has_install_media; then
     bootstrap_pkg_install_media
     install_local_package sudo
     install_local_package bash
     install_local_package curl
     install_local_package rsync
+  elif [ -n "${CUSTOM_PKG_REPO:-}" ]; then
+    configure_custom_pkg_repo "$CUSTOM_PKG_REPO"
+    pkg install sudo bash curl rsync
+  else
+    echo "WARNING: No package repository or install media available." >&2
+    echo "WARNING: Skipping package installation (sudo, bash, curl, rsync)." >&2
   fi
 }
 
 configure_sudo() {
-  mkdir -p /usr/local/etc/sudoers.d
-  cat <<EOF > "/usr/local/etc/sudoers.d/$SECONDARY_USER_USERNAME"
+  if command -v sudo > /dev/null 2>&1; then
+    mkdir -p /usr/local/etc/sudoers.d
+    cat <<EOF > "/usr/local/etc/sudoers.d/$SECONDARY_USER_USERNAME"
 Defaults:$SECONDARY_USER_USERNAME !requiretty
 $SECONDARY_USER_USERNAME ALL=(ALL) NOPASSWD: ALL
 EOF
-  chmod 440 "/usr/local/etc/sudoers.d/$SECONDARY_USER_USERNAME"
+    chmod 440 "/usr/local/etc/sudoers.d/$SECONDARY_USER_USERNAME"
+  fi
 }
 
 setup_secondary_user() {

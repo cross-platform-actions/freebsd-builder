@@ -63,6 +63,13 @@ jobs:
               qemu: x86
               uname: amd64
 
+          - version: '15.0'
+            expected_hostname: runnervmg1sw1.local
+            architecture:
+              name: riscv64
+              qemu: riscv64
+              uname: riscv
+
     steps:
       - name: Clone Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -78,6 +85,7 @@ jobs:
           rsync \
           curl \
           python3 \
+          libarchive-tools \
           qemu-system-${{ matrix.architecture.qemu }}
 
           if [ -f /usr/share/qemu-efi-aarch64/QEMU_EFI.fd ]; then
@@ -111,12 +119,15 @@ jobs:
             https://github.com/cross-platform-actions/freebsd-builder/releases/download/v0.5.0/freebsd-${{ matrix.version }}-${{ matrix.architecture.name }}.qcow2
 
       - name: Start Local HTTP Server
+        if: matrix.architecture.name != 'riscv64'
         run: python3 -m http.server 8080 --directory output &
 
       - name: Create File
+        if: matrix.architecture.name != 'riscv64'
         run: echo 'host to guest' > host_to_guest.txt
 
       - name: Test Image
+        if: matrix.architecture.name != 'riscv64'
         uses: cross-platform-actions/action@master
         with:
           operating_system: freebsd
@@ -148,6 +159,7 @@ jobs:
             echo 'guest to host' > guest_to_host.txt
 
       - name: Verify File Synchronization
+        if: matrix.architecture.name != 'riscv64'
         run: cat guest_to_host.txt | grep -q 'guest to host'
 
       - name: Create Release

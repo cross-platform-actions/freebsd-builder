@@ -2,3 +2,6 @@ ovmf.fd
 packer_cache
 packer_cache_backup
 output
+.cache
+serial.log
+resources/dist
