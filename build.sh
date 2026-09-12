@@ -7,7 +7,7 @@ ARCHITECTURE="$1"; shift
 
 packer init .
 
-export PACKER_GETTER_READ_TIMEOUT=60m
+export PACKER_GETTER_READ_TIMEOUT=120m
 
 # Download a URL to a local file.  Try curl first (available everywhere),
 # then wget as a fallback.
