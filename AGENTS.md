@@ -9,7 +9,7 @@ GitHub Action. The codebase consists of shell scripts, HashiCorp Configuration L
 Python, etc.).
 
 **Supported architectures:** `x86-64`, `arm64`
-**Supported FreeBSD versions:** 12.2, 12.4, 13.0–13.5, 14.0–14.4, 15.0
+**Supported FreeBSD versions:** 12.2, 12.4, 13.0–13.5, 14.0–14.5, 15.0, 15.1
 
 ## Build Commands
 
